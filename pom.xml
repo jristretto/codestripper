@@ -28,5 +28,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.release>17</java.release>
+        <exec.mainClass>io.github.jristretto.codestripper.CodeStripperMain</exec.mainClass>
     </properties>
 </project>
