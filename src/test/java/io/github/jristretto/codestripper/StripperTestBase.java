@@ -1,0 +1,67 @@
+package io.github.jristretto.codestripper;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assumptions.assumeThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ *
+ * @author Pieter van den Hombergh {@code <pieter.van.den.hombergh@gmail.com>}
+ */
+public class StripperTestBase {
+
+    Path tempDir;
+//    Path pwd = Path.of( System.getProperty( "user.dir" ) );
+    final Logger log = LoggerFactory.getLogger(getClass());
+    //    String projectName = pwd.getFileName().toString();
+    //    Path expandedArchive;
+
+    PathLocations locations;
+
+    public StripperTestBase() {
+        Assertions.setMaxStackTraceElementsDisplayed(10 );
+        try {
+            Path sampleproject = Path.of( "sampleproject", "example" ).toAbsolutePath();
+            assumeThat( sampleproject ).as("sampleproject "+sampleproject
+                    + " should exist ").exists();
+            tempDir = Files.createTempDirectory( "codestripper-" + this
+                    .getClass().getSimpleName() + "-" );
+            locations = new PathLocations( log, sampleproject, tempDir );
+        } catch ( IOException ex ) {
+            log.error(  ex.getMessage() );
+            throw new IllegalArgumentException( ex );
+        }
+    }
+
+    @AfterEach
+    public void cleanup() throws IOException {
+//        cleanupStatic( tempDir );
+    }
+
+    static void cleanupStatic(Path dirToCleanAndRemove) throws IOException {
+        if ( !dirToCleanAndRemove.toFile().exists() ) {
+            return;
+        }
+        Path tempDir = Path.of( System.getProperty( "java.io.tmpdir" ) );
+        // refuse to clean anything but temp.
+        if ( !dirToCleanAndRemove.startsWith( tempDir ) ) {
+            return;
+        }
+        List<Path> collect = Files
+                .walk( dirToCleanAndRemove, Integer.MAX_VALUE )
+                .sorted( ( f1, f2 ) -> f2.compareTo( f1 ) )
+                .collect( toList() );
+        collect.stream()
+                .forEach( f -> f.toFile().delete() );
+        dirToCleanAndRemove.toFile().delete();
+//        assertThat( dirToCleanAndRemove.toFile() ).doesNotExist();
+    }
+
+}
