@@ -1,5 +1,6 @@
 package io.github.jristretto.codestripper;
 
+import cslogger.CSLogger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,8 +25,7 @@ import org.slf4j.Logger;
 final class Archiver implements AutoCloseable {
 
     private final PathLocations locations;
-    private final Logger logger;
-    private boolean verbose=true;
+    private final CSLogger logger;
 
     /**
      * Create a new archiver.
@@ -34,15 +34,15 @@ final class Archiver implements AutoCloseable {
      * @param locations directory and name info to use
      * @throws IOException should not occur.
      */
-    public Archiver(Logger log, PathLocations locations)
+    public Archiver(CSLogger log, PathLocations locations)
             throws IOException {
         this.locations = locations;
         this.logger = log;
-        this.solution = new Zipper( logger, this.locations.out()
-                .resolve( "solution.zip" ) );
-        assignment = new Zipper( logger, this.locations.out()
-                .resolve( this.locations
-                        .assignmentName() + ".zip" ) );
+        this.solution = new Zipper(logger, this.locations.out()
+                .resolve("solution.zip"));
+        assignment = new Zipper(logger, this.locations.out()
+                .resolve(this.locations
+                        .assignmentName() + ".zip"));
     }
     final Zipper solution;
     final Zipper assignment;
@@ -58,27 +58,27 @@ final class Archiver implements AutoCloseable {
      * @param lines to add
      */
     void addAssignmentLines(Path file, List<String> lines) throws IOException {
-        Path pathInZip = pathInZip( "assignment", file );
-        addLinesToZip( assignment, pathInZip, lines );
+        Path pathInZip = pathInZip("assignment", file);
+        addLinesToZip(assignment, pathInZip, lines);
         Path targetFile = locations.expandedArchive()
-                .resolve( pathInZip );
-        Files.createDirectories( targetFile.getParent() );
-        Files.write( targetFile, lines );
+                .resolve(pathInZip);
+        Files.createDirectories(targetFile.getParent());
+        Files.write(targetFile, lines);
     }
 
     void addSolutionLines(Path file, List<String> lines) throws IOException {
-        Path pathInZip = pathInZip( "solution", file );
-        addLinesToZip( solution, pathInZip, lines );
+        Path pathInZip = pathInZip("solution", file);
+        addLinesToZip(solution, pathInZip, lines);
     }
 
     Path pathInZip(String sol, Path file) {
-        Path pathInZip = Path.of( sol, locations.projectName() )
-                .resolve( locations.workRelative( file ) );
+        Path pathInZip = Path.of(sol, locations.projectName())
+                .resolve(locations.workRelative(file));
         return pathInZip;
     }
 
     void addLinesToZip(Zipper zipper, Path file, List<String> lines) throws IOException {
-        zipper.add( file, lines );
+        zipper.add(file, lines);
     }
 
     /**
@@ -88,23 +88,13 @@ final class Archiver implements AutoCloseable {
      */
     void addFile(Path file) {
         // find relative path from work dir to file and use that in archive
-        Path x = locations.workRelative( file );
+        Path x = locations.workRelative(file);
         //solution contains parent/project
-        Path inZip = locations.inZip( "solution", x );
-        solution.add( inZip, file );
-        if (verbose) {
-            System.out.println("added to solution = " + inZip );
-        }
-        Path inZip2 = locations.inZip( "assignment", x );
-        assignment.add( inZip2, file );
-        if (verbose) {
-            System.out.println("added to assignment = " + inZip2 );
-        }
-        addAssignmentFile( inZip2, file );
-        if (verbose) {
-            System.out.println("added to expanded project = " + inZip2 );
-        }
-
+        Path solutionFile = locations.inZip("solution", x);
+        solution.add(solutionFile, file);
+        Path assignmentFile = locations.inZip("assignment", x);
+        assignment.add(assignmentFile, file);
+        addAssignmentFile(assignmentFile, file);
     }
 
     /**
@@ -115,13 +105,13 @@ final class Archiver implements AutoCloseable {
      */
     void addAssignmentFile(Path destFile, Path source) {
         try {
-            Path archiveFile = locations.inArchive( destFile );
-            Files.createDirectories( archiveFile
-                    .getParent() );
-            Files.copy( locations.inWorkFile( source ), archiveFile,
-                    StandardCopyOption.REPLACE_EXISTING );
-        } catch ( IOException ex ) {
-            logger.error( "io exception on " + ex.getMessage() );
+            Path archiveFile = locations.inArchive(destFile);
+            Files.createDirectories(archiveFile
+                    .getParent());
+            Files.copy(locations.inWorkFile(source), archiveFile,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            logger.error(() -> "io exception on " + ex.getMessage());
         }
     }
 
@@ -133,41 +123,41 @@ final class Archiver implements AutoCloseable {
      * @param extraResources
      */
     void addExtras(List<String> extraResources) {
-        if ( extraResources.isEmpty() ) {
-            logger.info( "no extraResources specified" );
+        if (extraResources.isEmpty()) {
+            logger.info(() -> "no extraResources specified");
             return;
         }
-        logger.debug( "Add extras" );
-        for ( String extraResource : extraResources ) {
-            logger.debug( "considering extra resource " + extraResource );
+        logger.debug(() -> "Add extras");
+        for (String extraResource : extraResources) {
+            logger.debug(() -> "considering extra resource " + extraResource);
             try {
 
-                var toZip = locations.inWorkFile( extraResource )
+                var toZip = locations.inWorkFile(extraResource)
                         .normalize();
-                if ( Files.notExists( toZip ) ) {
-                    logger.warn(
-                           "file resource does not exist \033[33m " + toZip
-                                    .toString() + "\033[m" );
+                if (Files.notExists(toZip)) {
+                    logger.warn(()
+                            -> "file resource does not exist \033[33m " + toZip
+                                    .toString() + "\033[m");
                     continue;
                 }
-                if ( Files.isRegularFile( toZip ) ) {
-                    logger.info(
-                            "adding file \033[32m" + extraResource + "\033[m" );
-                    addFile( toZip );
-                } else if ( Files.isDirectory( toZip ) ) {
-                    Files.walk( toZip, Integer.MAX_VALUE )
-                            .filter( f -> locations.acceptablePath( f ) )
-                            .map( f -> locations.work()
-                            .relativize( f ) )
-                            .peek( f -> logger.info(
-                             "adding file \033[32m" + f + "\033[m" ) )
-                            .forEach( p -> addFile( p ) );
+                if (Files.isRegularFile(toZip)) {
+                    logger.info(()
+                            -> "adding file \033[32m" + extraResource + "\033[m");
+                    addFile(toZip);
+                } else if (Files.isDirectory(toZip)) {
+                    Files.walk(toZip, Integer.MAX_VALUE)
+                            .filter(f -> locations.acceptablePath(f))
+                            .map(f -> locations.work()
+                            .relativize(f))
+                            .peek(f -> logger.info(()
+                            -> "adding file \033[32m" + f + "\033[m"))
+                            .forEach(p -> addFile(p));
                 } else {
-                    logger.warn(
-                             "Not a file or dir: \033[33m" + extraResource + "\033[m" );
+                    logger.warn(()
+                            -> "Not a file or dir: \033[33m" + extraResource + "\033[m");
                 }
-            } catch ( IOException ex ) {
-                logger.error( ex.getMessage() );
+            } catch (IOException ex) {
+                logger.error(() -> ex.getMessage());
             }
 
         }
@@ -176,10 +166,10 @@ final class Archiver implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        if ( null != solution ) {
+        if (null != solution) {
             solution.close();
         }
-        if ( null != assignment ) {
+        if (null != assignment) {
             assignment.close();
         }
     }
@@ -196,13 +186,13 @@ final class Archiver implements AutoCloseable {
      */
     void addAssignmentFiles(Path root) throws IOException {
         Path pwd = locations.work();
-        Files.walk( root, Integer.MAX_VALUE )
-                .filter( f -> locations.acceptablePath( f ) )
-                .filter( Predicate.not( ChippenDale::isText ) )
-                .map( p -> pwd.relativize( p.toAbsolutePath() ) )
-                .peek( f -> logger.debug( "bin file added \033[35m" + f
-                .toString() + "\033[m" ) )
-                .forEach( file -> addFile( file ) );
+        Files.walk(root, Integer.MAX_VALUE)
+                .filter(f -> locations.acceptablePath(f))
+                .filter(Predicate.not(ChippenDale::isText))
+                .map(p -> pwd.relativize(p.toAbsolutePath()))
+                .peek(f -> logger.debug(() -> "bin file added \033[35m" + f
+                .toString() + "\033[m"))
+                .forEach(file -> addFile(file));
     }
 
     @Override
@@ -210,5 +200,4 @@ final class Archiver implements AutoCloseable {
         return "Archiver{" + "locations=" + locations + ", logger=" + logger + ", solution=" + solution + ", assignment=" + assignment + '}';
     }
 
-    
 }

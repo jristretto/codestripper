@@ -1,10 +1,10 @@
 package io.github.jristretto.streamprocessor;
 
+import cslogger.CSLogger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import static java.util.Map.entry;
 import java.util.function.Function;
@@ -35,11 +35,11 @@ public class ProcessorFactory implements Function<String, Stream<String>> {
      * @param lines to use
      * @param logger logger to use
      */
-    public ProcessorFactory( Logger logger) {
-        this( "cs", "text/x-java", logger);
+    public ProcessorFactory(CSLogger logger) {
+        this("cs", "text/x-java", logger);
     }
 
-    private final Logger logger;
+    private final CSLogger logger;
 
     /**
      * Create a factory for the given file and specify the tag
@@ -48,7 +48,7 @@ public class ProcessorFactory implements Function<String, Stream<String>> {
      * @param tag to use
      * @param logger to use
      */
-    public ProcessorFactory(String tag, String mimeType, Logger logger) {
+    public ProcessorFactory(String tag, String mimeType, CSLogger logger) {
         this.logger = logger;
         commentToken = commentTokenFor(mimeType);
         myPreciousRegex
@@ -144,7 +144,7 @@ public class ProcessorFactory implements Function<String, Stream<String>> {
             if ("start".equals(startEnd)) {
                 openStart.push(result);
             }
-            logger.debug("executing instruction \033[36m" + startEnd + " "
+            logger.debug(() -> "executing instruction \033[36m" + startEnd + " "
                     + result.instruction() + "\033[m at line " + lineNumber + ": \033[36m[" + line + "]\033[m");
             return result;
         }
@@ -183,7 +183,7 @@ public class ProcessorFactory implements Function<String, Stream<String>> {
                             l -> proc.indent() + l);
         } catch (IOException ex) {
 
-            logger.error(ex.getMessage());
+            logger.error(() -> ex.getMessage());
             return Stream.empty();
         }
     }
@@ -260,7 +260,7 @@ public class ProcessorFactory implements Function<String, Stream<String>> {
 
     final Stream<String> comment(Processor p) {
         String result = p.indent() + "//" + p.text();
-        logger.debug("comment  line " + p.lineNumber()
+        logger.debug(() -> "comment  line " + p.lineNumber()
                 + ": [\033[37;2m" + result + "\033[m]");
 
         return Stream.of(result);
@@ -269,11 +269,11 @@ public class ProcessorFactory implements Function<String, Stream<String>> {
     final Stream<String> remove(Processor p) {
         if (!p.payLoad()
                 .isBlank()) {
-            logger.debug("replaced line " + p.lineNumber()
+            logger.debug(() -> "replaced line " + p.lineNumber()
                     + ": [\033[33m" + p.indent() + p.payLoad() + "\033[m]");
             return Stream.of(p.indent() + p.payLoad());
         }
-        logger.debug("removed line '" + p.lineNumber()
+        logger.debug(() -> "removed line '" + p.lineNumber()
                 + ": [\033[2;37;9m" + p.line() + "\033[m]");
         return Stream.empty();
     }

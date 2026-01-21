@@ -1,5 +1,6 @@
 package io.github.jristretto.codestripper;
 
+import cslogger.CSLogger;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -7,7 +8,7 @@ import java.nio.file.Path;
 import static java.nio.file.Path.of;
 import static java.lang.System.getProperty;
 import java.util.Objects;
-import org.slf4j.Logger;
+
 /**
  * Set of locations.
  *
@@ -22,7 +23,7 @@ import org.slf4j.Logger;
  * @param assignmentName configurable in properties
  * @param projectName configurable in properties
  */
-public record PathLocations(Logger logger, Path work, Path out,
+public record PathLocations(CSLogger logger, Path work, Path out,
         String assignmentName,
         String projectName) {
 
@@ -35,35 +36,35 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @param assignmentName not null not blank
      * @param projectName not null not blank
      */
-    public PathLocations     {
-        Objects.requireNonNull( logger );
-        Objects.requireNonNull( assignmentName );
-        Objects.requireNonNull( projectName );
+    public PathLocations {
+        Objects.requireNonNull(logger);
+        Objects.requireNonNull(assignmentName);
+        Objects.requireNonNull(projectName);
         assert !assignmentName.isBlank();
         assert !projectName.isBlank();
-        if ( !work.toFile().exists() ) {
-            throw new IllegalArgumentException( "work dir Path " + work
+        if (!work.toFile().exists()) {
+            throw new IllegalArgumentException("work dir Path " + work
                     .toString()
-                    + " should already exists!" );
+                    + " should already exists!");
         }
-        if ( !out.toFile().exists() ) {
-            throw new IllegalArgumentException( "out dir Path " + out.toString()
-                    + " should already exists!" );
+        if (!out.toFile().exists()) {
+            throw new IllegalArgumentException("out dir Path " + out.toString()
+                    + " should already exists!");
         }
-        if ( !Files.isWritable( out ) ) {
-            throw new IllegalArgumentException( "Path " + out.toString()
-                    + " is not writable!" );
+        if (!Files.isWritable(out)) {
+            throw new IllegalArgumentException("Path " + out.toString()
+                    + " is not writable!");
         }
-        if ( out.equals( work ) ) {
+        if (out.equals(work)) {
             throw new IllegalArgumentException(
                     "out and work Paths should be different, now both are " + work
-                            .toString() );
+                            .toString());
         }
-        if ( work.toAbsolutePath().startsWith( out.toAbsolutePath() ) ) {
+        if (work.toAbsolutePath().startsWith(out.toAbsolutePath())) {
             throw new IllegalArgumentException(
                     "work dir" + work.toString()
                     + " should not be a child of the out " + out.toString()
-                    + " dir to prevent accidental overwriting " );
+                    + " dir to prevent accidental overwriting ");
         }
     }
 
@@ -74,9 +75,9 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @param work readable dir
      * @param out writable dir
      */
-    public PathLocations(Logger logger, Path work, Path out) {
-        this( logger, work, out, "assignment",
-                work.toAbsolutePath().getFileName().toString() );
+    public PathLocations(CSLogger logger, Path work, Path out) {
+        this(logger, work, out, "assignment",
+                work.toAbsolutePath().getFileName().toString());
     }
 
     /**
@@ -85,10 +86,10 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @param logger to use
      * @param out writable dir.
      */
-    public PathLocations(Logger logger, Path out) {
-        this( logger, Path.of( getProperty( "user.dir" ) ), out, "assignment",
-                of( getProperty( "user.dir" ) ).getFileName()
-                        .toString() );
+    public PathLocations(CSLogger logger, Path out) {
+        this(logger, Path.of(getProperty("user.dir")), out, "assignment",
+                of(getProperty("user.dir")).getFileName()
+                        .toString());
     }
 
     /**
@@ -108,7 +109,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      */
     public Path workRelative(Path other) {
 
-        return relTo( work, other );
+        return relTo(work, other);
     }
 
     /**
@@ -118,7 +119,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the relative path
      */
     public Path workRelative(String other) {
-        return relTo( work, Path.of( other ) );
+        return relTo(work, Path.of(other));
     }
 
     /**
@@ -131,7 +132,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the relative path of other to root
      */
     Path relTo(final Path root, Path other) {
-        return root.relativize( root.resolve( other ) );
+        return root.relativize(root.resolve(other));
     }
 
     /**
@@ -141,7 +142,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the relative path
      */
     public Path outRelative(Path other) {
-        return relTo( work, other );
+        return relTo(work, other);
     }
 
     /**
@@ -151,7 +152,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the path of the file with the parent existing
      */
     public Path inOutFile(String filePath) {
-        return out.resolve( filePath );
+        return out.resolve(filePath);
     }
 
     /**
@@ -161,7 +162,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the path of the file with the parent existing
      */
     public Path inWorkFile(String filePath) {
-        return work.resolve( filePath );
+        return work.resolve(filePath);
     }
 
     /**
@@ -171,7 +172,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the path of the file with the parent existing
      */
     public Path inWorkFile(Path filePath) {
-        return work.resolve( filePath );
+        return work.resolve(filePath);
     }
 
     /**
@@ -181,15 +182,15 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the path which exists
      */
     public Path expandedArchive() {
-        Path p = out().resolve( "expandedArchive" ).toAbsolutePath();
-        if ( Files.exists( p ) ) {
+        Path p = out().resolve("expandedArchive").toAbsolutePath();
+        if (Files.exists(p)) {
             return p;
         }
         try {
-            return Files.createDirectories( p );
-        } catch ( IOException ex ) {
-            logger.error( ex.getMessage() );
-            throw new UncheckedIOException( ex );
+            return Files.createDirectories(p);
+        } catch (IOException ex) {
+            logger.error(() -> ex.getMessage());
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -200,7 +201,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the file resolved.
      */
     public Path projectFile(Path file) {
-        return work().resolve( file );
+        return work().resolve(file);
     }
 
     /**
@@ -211,30 +212,30 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return true if acceptable false otherwise.
      */
     public boolean acceptablePath(Path p) {
-        if ( p.toString().startsWith( ".git" ) ) {
+        if (p.toString().startsWith(".git")) {
             return false;
         }
-        if ( p.getFileName().toString().startsWith( ".git" ) ) {
+        if (p.getFileName().toString().startsWith(".git")) {
             return false;
         }
         Path absPath = p.toAbsolutePath();
         var itr = absPath.iterator();
         // no .git in dir name
-        while ( itr.hasNext() ) {
-            if ( itr.next().getFileName().toString().equals( ".git" ) ) {
+        while (itr.hasNext()) {
+            if (itr.next().getFileName().toString().equals(".git")) {
                 return false;
             }
         }
-        if ( absPath.startsWith( out ) ) {
+        if (absPath.startsWith(out)) {
             return false;
         }
-        if ( absPath.startsWith( work().resolve( "target" ) ) ) {
+        if (absPath.startsWith(work().resolve("target"))) {
             return false;
         }
-        if ( Files.isDirectory( absPath ) ) {
+        if (Files.isDirectory(absPath)) {
             return false;
         }
-        return !absPath.getFileName().toString().endsWith( "~" );
+        return !absPath.getFileName().toString().endsWith("~");
     }
 
     /**
@@ -243,8 +244,8 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the dir.
      */
     public Path strippedProject() {
-        return expandedArchive().resolve( assignmentName )
-                .resolve( projectName );
+        return expandedArchive().resolve(assignmentName)
+                .resolve(projectName);
     }
 
     /**
@@ -255,7 +256,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the path
      */
     public Path inZip(String zipname, Path f) {
-        return Path.of( zipname, projectName() ).resolve( f ).normalize();
+        return Path.of(zipname, projectName()).resolve(f).normalize();
     }
 
     /**
@@ -265,7 +266,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the path
      */
     public Path inArchive(Path f) {
-        return expandedArchive().resolve( f );
+        return expandedArchive().resolve(f);
     }
 
     /**
@@ -289,7 +290,7 @@ public record PathLocations(Logger logger, Path work, Path out,
      * @return the shortened path.
      */
     public Path expandedArchiveRelative(Path f) {
-        return expandedArchive().relativize( f );
+        return expandedArchive().relativize(f);
     }
 
 }
