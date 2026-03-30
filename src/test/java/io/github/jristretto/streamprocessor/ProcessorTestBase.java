@@ -1,9 +1,7 @@
 package io.github.jristretto.streamprocessor;
 
-import java.util.List;
-import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import cslogger.CSLogger;
+import cslogger.StdioLogger;
 
 
 /**
@@ -13,7 +11,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ProcessorTestBase {
 
-    final Logger logger = LoggerFactory.getLogger(Processor.class);
+    final CSLogger logger = new StdioLogger();
 
     ProcessorFactory newProcessorFactory() {
         return new ProcessorFactory( logger );

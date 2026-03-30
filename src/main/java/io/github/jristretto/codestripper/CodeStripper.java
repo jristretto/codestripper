@@ -38,8 +38,10 @@ public final class CodeStripper {
             processTextFiles(root, archiver);
             logger.debug(() -> "adding non-stripables");
             archiver.addAssignmentFiles(root);
-            logger.debug(() -> "adding extras");
-            archiver.addExtras(extraResources);
+            logger.debug(() -> "adding extras " + extraResources);
+            if (!extraResources.isEmpty()) {
+                archiver.addExtras(extraResources);
+            }
         } catch (Exception ex) {
             logger.error(() -> ex.getMessage());
         } finally {

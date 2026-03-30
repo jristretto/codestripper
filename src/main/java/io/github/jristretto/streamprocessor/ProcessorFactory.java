@@ -28,6 +28,7 @@ public class ProcessorFactory implements Function<String, Stream<String>> {
     private final String myPreciousRegex;
     private final Pattern pattern;
     private final String commentToken;
+    private final CSLogger logger;
 
     /**
      * Create a factory for the type of file specified by this path.
@@ -39,7 +40,6 @@ public class ProcessorFactory implements Function<String, Stream<String>> {
         this("cs", "text/x-java", logger);
     }
 
-    private final CSLogger logger;
 
     /**
      * Create a factory for the given file and specify the tag

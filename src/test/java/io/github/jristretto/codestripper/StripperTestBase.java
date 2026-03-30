@@ -1,5 +1,7 @@
 package io.github.jristretto.codestripper;
 
+import cslogger.CSLogger;
+import cslogger.StdioLogger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,8 +10,6 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -19,7 +19,7 @@ public class StripperTestBase {
 
     Path tempDir;
 //    Path pwd = Path.of( System.getProperty( "user.dir" ) );
-    final Logger log = LoggerFactory.getLogger(getClass());
+    final CSLogger log = new StdioLogger();
     //    String projectName = pwd.getFileName().toString();
     //    Path expandedArchive;
 
@@ -35,7 +35,7 @@ public class StripperTestBase {
                     .getClass().getSimpleName() + "-" );
             locations = new PathLocations( log, sampleproject, tempDir );
         } catch ( IOException ex ) {
-            log.error(  ex.getMessage() );
+            log.error( ()-> ex.getMessage() );
             throw new IllegalArgumentException( ex );
         }
     }

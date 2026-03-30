@@ -25,7 +25,7 @@ public class CodeStripperMain implements Callable<Integer> {
             description = "comma separated extra files to add not within this directory or its children.",
             arity = "1..*"
     )
-    private String extras = "";
+    private List<String> extras = List.of();
 
 //    @Option( names = { "-v", "--verbosity" },
 //             description = "Level of detail output. Values from verbose to quiet: FINE, DEBUG, INFO(default), WARNING, ERROR, MUTE(absolute silence)",
@@ -40,6 +40,7 @@ public class CodeStripperMain implements Callable<Integer> {
 
     private boolean helpRequested = false;
 
+    @Override
     public Integer call() throws Exception {
         if (helpRequested) {
             return 0;
@@ -55,7 +56,7 @@ public class CodeStripperMain implements Callable<Integer> {
                 = new CodeStripper.Builder()
                         .pathLocations(locations)
                         .logger(logger)
-                        .extraResources(List.of(extras.split(",")))
+                        .extraResources(extras)
                         .build();
 
         for (String s : locations.toString()

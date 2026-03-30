@@ -25,6 +25,11 @@ import java.util.function.Supplier;
 public class StdioLogger implements CSLogger {
 
     private final PrintStream out;
+    private static final String errorP = "[\033[31;1mERROR\033[m] ";
+    private static final String infoP = "[\033[34;1mINFO\033[m] ";
+    private static final String warnP = "[\033[1;33mWARNING\033[37;1m]\033[m ";
+    private static final String debugP = "[\033[35;1mDEBUG\033[m] ";
+    private static final String fineP = "[\033[32;1mFINER\033[m] ";
 
     public StdioLogger(PrintStream out) {
         this.out = out;
@@ -34,24 +39,23 @@ public class StdioLogger implements CSLogger {
         this.out = System.out;
     }
 
-
     @Override
     public void info(Supplier<String> msgSupplier) {
-        out.println(msgSupplier.get());
+        out.println(infoP + msgSupplier.get());
     }
 
     @Override
     public void debug(Supplier<String> msgSupplier) {
-        out.println(msgSupplier.get());
+        out.println(debugP + msgSupplier.get());
     }
 
     @Override
     public void error(Supplier<String> msgSupplier) {
-        out.println(msgSupplier.get());
+        out.println(errorP + msgSupplier.get());
     }
 
     @Override
     public void warn(Supplier<String> msgSupplier) {
-        out.println(msgSupplier.get());
+        out.println(warnP + msgSupplier.get());
     }
 }

@@ -185,6 +185,7 @@ final class Archiver implements AutoCloseable {
      * @throws IOException should not occur.
      */
     void addAssignmentFiles(Path root) throws IOException {
+        logger.info(()-> "adding non program files");
         Path pwd = locations.work();
         Files.walk(root, Integer.MAX_VALUE)
                 .filter(f -> locations.acceptablePath(f))
@@ -193,6 +194,7 @@ final class Archiver implements AutoCloseable {
                 .peek(f -> logger.debug(() -> "bin file added \033[35m" + f
                 .toString() + "\033[m"))
                 .forEach(file -> addFile(file));
+        logger.info(()-> "done adding non program files");
     }
 
     @Override
